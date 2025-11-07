@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Anti-Cheat Client</title>
+		<style>
+			video,
+			canvas {
+				width: 640px;
+				height: 480px;
+				border: 1px solid #ccc;
+			}
+			#status {
+				margin-top: 8px;
+				font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+		<h2>Anti-Cheat Webcam</h2>
+		<video id="video" autoplay playsinline></video>
+		<canvas id="canvas" width="640" height="480" style="display: none"></canvas>
+		<div id="status">Connecting...</div>
+
+		<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+		<script>
+			const video = document.getElementById("video");
+			const canvas = document.getElementById("canvas");
+			const ctx = canvas.getContext("2d");
+			const statusEl = document.getElementById("status");
+			const socket = io();
+
+			socket.on("connect", () => {
+				statusEl.textContent = "Connected to server";
+			});
+
+			socket.on("analysis", (data) => {
+				// display simplified status
+				let txt = `faces: ${data.faces_count || 0}`;
+				if (data.face_missing) txt += " | face missing";
+				if (data.suspicious) {
+					const s = data.suspicious;
+					if (s.multiple_faces) txt += " | MULTIPLE FACES";
+					if (s.looking_away) txt += " | LOOKING AWAY";
+					if (s.long_blink) txt += " | LONG BLINK";
+				}
+				if (data.gaze_norm) {
+					txt += ` | gaze x:${data.gaze_norm.x} y:${data.gaze_norm.y}`;
+				}
+				statusEl.textContent = txt;
+			});
+
+			async function startCamera() {
+				try {
+					const stream = await navigator.mediaDevices.getUserMedia({
+						video: true,
+						audio: false,
+					});
+					video.srcObject = stream;
+					video.onloadedmetadata = () => video.play();
+				} catch (e) {
+					statusEl.textContent = "Camera access denied";
+					console.error(e);
+				}
+			}
+
+			// capture and send frames at target FPS
+			const TARGET_FPS = 5;
+			function sendFrameLoop() {
+				ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+				const dataUrl = canvas.toDataURL("image/jpeg", 0.6); // compress
+				socket.emit("frame", dataUrl);
+				setTimeout(sendFrameLoop, 1000 / TARGET_FPS);
+			}
+
+			startCamera().then(() => {
+				video.addEventListener("play", () => {
+					sendFrameLoop();
+				});
+			});
+		</script>
+	</body>
+</html>
