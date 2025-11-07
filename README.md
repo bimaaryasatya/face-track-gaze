@@ -1,15 +1,9 @@
 
 # Face Gaze Tracker
 
-Using flask for run at localhost, you need setup the venv and install requirements
-
-
-
+Using flask for run at localhost and droidCam module for the camera, you need setup the venv and install requirements
 
 ### Setup the VENV
-
-
-
 
 ```bash
   python -m venv venv
@@ -19,6 +13,13 @@ Using flask for run at localhost, you need setup the venv and install requiremen
 ```bash
   pip install -r requirements.txt
 ```
+
+### Setup DroidCam URL
+On app.py you should change the DROIDCAM_URL with your own local IP
+```bash
+  DROIDCAM_URL = "http://[YOUR_IP]/video"
+```
+
 ### Run app
 
 ```bash
