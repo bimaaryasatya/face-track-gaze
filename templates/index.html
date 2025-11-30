@@ -1,24 +1,73 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Deteksi Anti-Cheating</title>
-		<style>
-			body {
-				background-color: #111;
-				color: white;
-				text-align: center;
-				font-family: Arial, sans-serif;
-			}
-			img {
-				border: 2px solid #00ff00;
-				border-radius: 10px;
-				width: 80%;
-				max-width: 720px;
-			}
-		</style>
+		<meta charset="utf-8" />
+		<title>Exam Monitor - Browser</title>
 	</head>
 	<body>
-		<h1>Streaming Kamera - Anti Cheating</h1>
-		<img src="{{ url_for('video_feed') }}" />
+		<h2>Exam Monitor (Browser)</h2>
+		<p id="status">Status: connecting...</p>
+
+		<video id="video" autoplay playsinline width="480"></video>
+		<br />
+		<img id="processed" width="480" />
+		<div>
+			<strong>Notifications:</strong>
+			<ul id="notes"></ul>
+		</div>
+
+		<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+		<script>
+			const socket = io();
+			const video = document.getElementById("video");
+			const processed = document.getElementById("processed");
+			const statusEl = document.getElementById("status");
+			const notes = document.getElementById("notes");
+
+			socket.on("connect", () => {
+				statusEl.innerText = "Status: connected";
+			});
+			socket.on("connected", (d) => {
+				console.log("SID", d.sid);
+			});
+
+			socket.on("cheating_alert", (data) => {
+				const li = document.createElement("li");
+				li.innerText = `[ALERT] ${new Date().toLocaleTimeString()} - ${
+					data.detail
+				}`;
+				li.style.color = "red";
+				notes.prepend(li);
+				// visual warning
+				alert("CHEATING DETECTED: " + data.detail);
+			});
+
+			socket.on("processed_frame", (data) => {
+				processed.src = "data:image/jpeg;base64," + data;
+			});
+
+			// get camera
+			navigator.mediaDevices
+				.getUserMedia({ video: true })
+				.then((stream) => {
+					video.srcObject = stream;
+					const canvas = document.createElement("canvas");
+					const ctx = canvas.getContext("2d");
+
+					// send frames continuously
+					setInterval(() => {
+						if (!video.videoWidth) return;
+						canvas.width = video.videoWidth;
+						canvas.height = video.videoHeight;
+						ctx.drawImage(video, 0, 0);
+						const frame = canvas.toDataURL("image/jpeg", 0.7);
+						socket.emit("send_frame", frame);
+					}, 100); // 10 fps
+				})
+				.catch((err) => {
+					statusEl.innerText = "Status: camera denied or not available";
+					console.error(err);
+				});
+		</script>
 	</body>
 </html>
