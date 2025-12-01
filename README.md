@@ -14,17 +14,17 @@ Using flask for run at localhost and droidCam module for the camera, you need se
   pip install -r requirements.txt
 ```
 
-### Setup DroidCam URL
-On app.py you should change the DROIDCAM_URL with your own local IP
-```bash
-  DROIDCAM_URL = "http://[YOUR_IP]/video"
-```
-
 ### Run app
 
 ```bash
   python app.py
 ```
+
+### Setup Integrated Camera fro Web (WebRTC)
+
+You must allow the camera permission for display the processed image of cheating detection
+
+
 ## Screenshots
 
 ![App Screenshot](https://res.cloudinary.com/dyvbjniwt/image/upload/v1762526741/vlcsnap-2025-11-07-21h37m56s556_zhnasu.png)
