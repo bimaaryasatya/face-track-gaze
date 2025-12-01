@@ -6,7 +6,7 @@ import numpy as np
 import base64
 import sqlite3
 import time
-import datetime
+from datetime import datetime, timezone
 
 
 # -----------------------
@@ -59,12 +59,15 @@ def close_connection(exception):
     if db is not None:
         db.close()
 
+
 def log_event(socket_id, event_type, detail=""):
     db = get_db()
     cur = db.cursor()
-    cur.execute("INSERT INTO events (socket_id, event_type, detail, timestamp) VALUES (?, ?, ?, ?)",
-                (socket_id, event_type, detail, datetime.datetime.now(datetime.timezone.utc).isoformat()
-))
+    ts = datetime.now(timezone.utc).isoformat()
+    cur.execute(
+        "INSERT INTO events (socket_id, event_type, detail, timestamp) VALUES (?, ?, ?, ?)",
+        (socket_id, event_type, detail, ts)
+    )
     db.commit()
 
 # Init DB on server start
