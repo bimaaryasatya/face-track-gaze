@@ -6,7 +6,8 @@ import numpy as np
 import base64
 import sqlite3
 import time
-from datetime import datetime
+import datetime
+
 
 # -----------------------
 # CONFIG
@@ -62,7 +63,8 @@ def log_event(socket_id, event_type, detail=""):
     db = get_db()
     cur = db.cursor()
     cur.execute("INSERT INTO events (socket_id, event_type, detail, timestamp) VALUES (?, ?, ?, ?)",
-                (socket_id, event_type, detail, datetime.now(datetime.timezone.utc).isoformat()))
+                (socket_id, event_type, detail, datetime.datetime.now(datetime.timezone.utc).isoformat()
+))
     db.commit()
 
 # Init DB on server start
